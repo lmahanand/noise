@@ -3,14 +3,25 @@ package callbacks
 import "sync"
 
 type ReduceCallbackManager struct {
-	sync.Mutex
+	*sync.Mutex
 
 	callbacks []*reduceCallback
 	reverse   bool
 }
 
-func NewReduceCallbackManager() *ReduceCallbackManager {
-	return &ReduceCallbackManager{reverse: false}
+func NewReduceCallbackManager(mu *sync.Mutex) *ReduceCallbackManager {
+	r := &ReduceCallbackManager{
+		reverse: false,
+
+	}
+
+	if mu == nil {
+		r.Mutex = new(sync.Mutex)
+	} else {
+		r.Mutex = mu
+	}
+
+	return r
 }
 
 func (m *ReduceCallbackManager) Reverse() *ReduceCallbackManager {

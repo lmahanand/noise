@@ -229,7 +229,7 @@ func OnEachPeerAuthenticated(n *noise.Node, c func(node *noise.Node, peer *noise
 }
 
 func defaultAuthCallbackManager() *callbacks.SequentialCallbackManager {
-	manager := callbacks.NewSequentialCallbackManager()
+	manager := callbacks.NewSequentialCallbackManager(nil)
 
 	// Deregister peer ID when a peer disconnects.
 	manager.RegisterCallback(func(params ...interface{}) error {

@@ -20,6 +20,7 @@ type Peer struct {
 	node *Node
 	conn net.Conn
 
+	callbacksMu *sync.Mutex
 	onConnErrorCallbacks  *callbacks.SequentialCallbackManager
 	onDisconnectCallbacks *callbacks.SequentialCallbackManager
 
@@ -46,26 +47,29 @@ type Peer struct {
 }
 
 func newPeer(node *Node, conn net.Conn) *Peer {
+	callbacksMu := new(sync.Mutex)
+
 	return &Peer{
 		node: node,
 		conn: conn,
 
-		onConnErrorCallbacks:  callbacks.NewSequentialCallbackManager(),
-		onDisconnectCallbacks: callbacks.NewSequentialCallbackManager(),
+		callbacksMu: callbacksMu,
+		onConnErrorCallbacks:  callbacks.NewSequentialCallbackManager(callbacksMu),
+		onDisconnectCallbacks: callbacks.NewSequentialCallbackManager(callbacksMu),
 
-		onEncodeHeaderCallbacks: callbacks.NewReduceCallbackManager(),
-		onEncodeFooterCallbacks: callbacks.NewReduceCallbackManager(),
+		onEncodeHeaderCallbacks: callbacks.NewReduceCallbackManager(callbacksMu),
+		onEncodeFooterCallbacks: callbacks.NewReduceCallbackManager(callbacksMu),
 
-		onDecodeHeaderCallbacks: callbacks.NewSequentialCallbackManager(),
-		onDecodeFooterCallbacks: callbacks.NewSequentialCallbackManager(),
+		onDecodeHeaderCallbacks: callbacks.NewSequentialCallbackManager(callbacksMu),
+		onDecodeFooterCallbacks: callbacks.NewSequentialCallbackManager(callbacksMu),
 
-		beforeMessageReceivedCallbacks: callbacks.NewReduceCallbackManager().Reverse(),
-		beforeMessageSentCallbacks:     callbacks.NewReduceCallbackManager(),
+		beforeMessageReceivedCallbacks: callbacks.NewReduceCallbackManager(callbacksMu).Reverse(),
+		beforeMessageSentCallbacks:     callbacks.NewReduceCallbackManager(callbacksMu),
 
-		afterMessageReceivedCallbacks: callbacks.NewSequentialCallbackManager(),
-		afterMessageSentCallbacks:     callbacks.NewSequentialCallbackManager(),
+		afterMessageReceivedCallbacks: callbacks.NewSequentialCallbackManager(callbacksMu),
+		afterMessageSentCallbacks:     callbacks.NewSequentialCallbackManager(callbacksMu),
 
-		onMessageReceivedCallbacks: callbacks.NewOpcodeCallbackManager(),
+		onMessageReceivedCallbacks: callbacks.NewOpcodeCallbackManager(callbacksMu),
 
 		kill: make(chan struct{}, 1),
 	}

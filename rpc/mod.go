@@ -180,7 +180,7 @@ func Register(node *noise.Node) {
 	})
 
 	node.OnPeerInit(func(node *noise.Node, peer *noise.Peer) error {
-		manager := callbacks.NewOpcodeCallbackManager()
+		manager := callbacks.NewOpcodeCallbackManager(nil)
 
 		zero := uint32(0)
 

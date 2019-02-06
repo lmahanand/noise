@@ -26,7 +26,7 @@ func EnforceHandshakePolicy(node *noise.Node, policy HandshakePolicy) HandshakeP
 	node.Set(KeyHandshakePolicy, policy)
 
 	node.OnPeerInit(func(node *noise.Node, peer *noise.Peer) error {
-		peer.Set(KeyEstablishSessionCallbacks, callbacks.NewSequentialCallbackManager())
+		peer.Set(KeyEstablishSessionCallbacks, callbacks.NewSequentialCallbackManager(nil))
 		peer.Set(KeyEstablishSessionSignal, make(chan struct{}))
 		peer.Set(KeyEstablishSessionOnce, new(sync.Once))
 

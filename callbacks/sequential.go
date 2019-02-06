@@ -3,14 +3,22 @@ package callbacks
 import "sync"
 
 type SequentialCallbackManager struct {
-	sync.Mutex
+	*sync.Mutex
 
 	callbacks []*callback
 	reverse   bool
 }
 
-func NewSequentialCallbackManager() *SequentialCallbackManager {
-	return &SequentialCallbackManager{reverse: false}
+func NewSequentialCallbackManager(mu *sync.Mutex) *SequentialCallbackManager {
+	s := &SequentialCallbackManager{
+		reverse: false,
+	}
+	if mu == nil {
+		s.Mutex = new(sync.Mutex)
+	} else {
+		s.Mutex = mu
+	}
+	return s
 }
 
 func (m *SequentialCallbackManager) Reverse() *SequentialCallbackManager {

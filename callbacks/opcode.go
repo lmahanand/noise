@@ -8,20 +8,27 @@ import (
 // OpcodeCallbackManager maps opcodes to a sequential list of callback functions.
 // We assumes that there are at most 1 << 8 - 1 callbacks (opcodes are represented as uint32).
 type OpcodeCallbackManager struct {
-	sync.Mutex
+	*sync.Mutex
 
 	callbacks [math.MaxUint8 + 1]*SequentialCallbackManager
 }
 
-func NewOpcodeCallbackManager() *OpcodeCallbackManager {
-	return &OpcodeCallbackManager{}
+func NewOpcodeCallbackManager(mu *sync.Mutex) *OpcodeCallbackManager {
+	o := &OpcodeCallbackManager{}
+
+	if mu == nil {
+		o.Mutex = new(sync.Mutex)
+	} else {
+		o.Mutex = mu
+	}
+	return o
 }
 
 func (m *OpcodeCallbackManager) RegisterCallback(opcode byte, c callback) {
 	m.Lock()
 
 	if m.callbacks[opcode] == nil {
-		m.callbacks[opcode] = NewSequentialCallbackManager()
+		m.callbacks[opcode] = NewSequentialCallbackManager(m.Mutex)
 	}
 
 	manager := m.callbacks[opcode]

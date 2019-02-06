@@ -25,6 +25,7 @@ type Node struct {
 
 	maxMessageSize uint64
 
+	callbacksMu *sync.Mutex
 	onListenerErrorCallbacks *callbacks.SequentialCallbackManager
 	onPeerConnectedCallbacks *callbacks.SequentialCallbackManager
 	onPeerDialedCallbacks    *callbacks.SequentialCallbackManager
@@ -52,6 +53,8 @@ func NewNode(params parameters) (*Node, error) {
 
 	params.Port = params.Transport.Port(listener.Addr())
 
+	callbacksMu := new(sync.Mutex)
+
 	node := Node{
 		ID: params.ID,
 
@@ -63,10 +66,11 @@ func NewNode(params parameters) (*Node, error) {
 
 		maxMessageSize: params.MaxMessageSize,
 
-		onListenerErrorCallbacks: callbacks.NewSequentialCallbackManager(),
-		onPeerConnectedCallbacks: callbacks.NewSequentialCallbackManager(),
-		onPeerDialedCallbacks:    callbacks.NewSequentialCallbackManager(),
-		onPeerInitCallbacks:      callbacks.NewSequentialCallbackManager(),
+		callbacksMu: callbacksMu,
+		onListenerErrorCallbacks: callbacks.NewSequentialCallbackManager(callbacksMu),
+		onPeerConnectedCallbacks: callbacks.NewSequentialCallbackManager(callbacksMu),
+		onPeerDialedCallbacks:    callbacks.NewSequentialCallbackManager(callbacksMu),
+		onPeerInitCallbacks:      callbacks.NewSequentialCallbackManager(callbacksMu),
 
 		kill: make(chan struct{}, 1),
 	}
