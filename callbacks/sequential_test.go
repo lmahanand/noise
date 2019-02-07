@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestSequentialCallbacks(t *testing.T) {
@@ -31,7 +32,7 @@ func TestSequentialCallbacks(t *testing.T) {
 	assert.Empty(t, errs, "expected no errors from sequential callbacks")
 }
 
-func TestSequentialCallbacksConcurrent(t *testing.T) {
+func TestSequentialCallbacksRegisterConcurrent(t *testing.T) {
 	manager := NewSequentialCallbackManager(nil)
 
 	initial := uint32(3)
@@ -74,6 +75,47 @@ func TestSequentialCallbacksConcurrent(t *testing.T) {
 
 	assert.Equal(t, expected*2-removedMidwayVal-initial, actual, "got invalid result from sequential callbacks after deregistering callback")
 	assert.Empty(t, errs, "expected no errors from sequential callbacks")
+}
+
+// Execute the RunCallbacks concurrently.
+func TestSequentialCallbacksRunConcurrent(t *testing.T) {
+	manager := NewSequentialCallbackManager(nil)
+
+	expectedCount := numCB
+	for i := 0; i < expectedCount; i++ {
+		manager.RegisterCallback(func(params ...interface{}) error {
+			// pretend we're doing something here
+			time.Sleep(100 * time.Millisecond)
+
+			count := params[0].(*int)
+			*count++
+			return nil
+		})
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		var count = new(int)
+		errs := manager.RunCallbacks(count)
+
+		assert.Equal(t, expectedCount, *count, "got invalid callbacks count")
+		assert.Empty(t, errs, "expected no errors from sequential callbacks")
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		var count = new(int)
+		errs := manager.RunCallbacks(count)
+
+		assert.Equal(t, expectedCount, *count, "got invalid callbacks count")
+		assert.Empty(t, errs, "expected no errors from sequential callbacks")
+		wg.Done()
+	}()
+
+	wg.Wait()
 }
 
 func TestSequentialCallbackDeregistered(t *testing.T) {
