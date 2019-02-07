@@ -16,7 +16,7 @@ func TestReduceCallbacks(t *testing.T) {
 	for i := 0; i < numCB; i++ {
 		i := i
 
-		manager.RegisterCallback(func(in interface{}, params ...interface{}) (interface{}, error) {
+		manager.RegisterCallback(func(register registerReduceCallback, in interface{}, params ...interface{}) (interface{}, error) {
 			return in.(int) + i, nil
 		})
 
@@ -38,7 +38,7 @@ func TestReduceCallbacksDeregisterMidway(t *testing.T) {
 	for i := 0; i < numCB; i++ {
 		i := i
 
-		manager.RegisterCallback(func(in interface{}, params ...interface{}) (interface{}, error) {
+		manager.RegisterCallback(func(register registerReduceCallback, in interface{}, params ...interface{}) (interface{}, error) {
 			if i == numCB/2 {
 				return in.(int) + i, DeregisterCallback
 			}
@@ -78,7 +78,7 @@ func TestReduceCallbacksConcurrent(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			manager.RegisterCallback(func(in interface{}, params ...interface{}) (interface{}, error) {
+			manager.RegisterCallback(func(register registerReduceCallback, in interface{}, params ...interface{}) (interface{}, error) {
 				if i == numCB/2 {
 					return in.(int) + i, DeregisterCallback
 				}
@@ -114,7 +114,7 @@ func TestReduceCallbacksDeregistered(t *testing.T) {
 	for i := 0; i < numCB; i++ {
 		i := i
 
-		manager.RegisterCallback(func(in interface{}, params ...interface{}) (interface{}, error) {
+		manager.RegisterCallback(func(register registerReduceCallback, in interface{}, params ...interface{}) (interface{}, error) {
 			actual = append(actual, i)
 			return nil, DeregisterCallback
 		})
@@ -143,7 +143,7 @@ func TestReduceCallbacksOnError(t *testing.T) {
 	for i := 0; i < numCB; i++ {
 		err := errors.Errorf("%d", i)
 
-		manager.RegisterCallback(func(in interface{}, params ...interface{}) (interface{}, error) {
+		manager.RegisterCallback(func(register registerReduceCallback, in interface{}, params ...interface{}) (interface{}, error) {
 			return nil, err
 		})
 

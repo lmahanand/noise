@@ -29,13 +29,17 @@ func (m *SequentialCallbackManager) Reverse() *SequentialCallbackManager {
 func (m *SequentialCallbackManager) RegisterCallback(c callback) {
 	m.Lock()
 
+	m.UnsafeRegisterCallback(c)
+
+	m.Unlock()
+}
+
+func (m *SequentialCallbackManager) UnsafeRegisterCallback(c callback) {
 	if m.reverse {
 		m.callbacks = append([]*callback{&c}, m.callbacks...)
 	} else {
 		m.callbacks = append(m.callbacks, &c)
 	}
-
-	m.Unlock()
 }
 
 // RunCallbacks runs all callbacks on a variadic parameter list, and de-registers callbacks
@@ -43,18 +47,11 @@ func (m *SequentialCallbackManager) RegisterCallback(c callback) {
 func (m *SequentialCallbackManager) RunCallbacks(params ...interface{}) (errs []error) {
 	m.Lock()
 
-	cpy := make([]*callback, len(m.callbacks))
-	copy(cpy, m.callbacks)
-
-	m.callbacks = make([]*callback, 0)
-
-	m.Unlock()
-
 	var remaining []*callback
 	var err error
 
-	for _, c := range cpy {
-		if err = (*c)(params...); err != nil {
+	for _, c := range m.callbacks {
+		if err = (*c)(m.UnsafeRegisterCallback, params...); err != nil {
 			if err != DeregisterCallback {
 				errs = append(errs, err)
 			}
@@ -62,10 +59,7 @@ func (m *SequentialCallbackManager) RunCallbacks(params ...interface{}) (errs []
 			remaining = append(remaining, c)
 		}
 	}
-
-	m.Lock()
-
-	m.callbacks = append(m.callbacks, remaining...)
+	m.callbacks = remaining
 
 	m.Unlock()
 

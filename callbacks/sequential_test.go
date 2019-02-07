@@ -18,8 +18,36 @@ func TestSequentialCallbacks(t *testing.T) {
 	for i := 0; i < numCB; i++ {
 		i := uint32(i)
 
-		manager.RegisterCallback(func(params ...interface{}) error {
+		manager.RegisterCallback(func(register registerCallback, params ...interface{}) error {
 			actual += i
+			return nil
+		})
+
+		expected += i
+	}
+
+	errs := manager.RunCallbacks(initial)
+
+	assert.Equal(t, expected, actual, "got invalid result from sequential callbacks")
+	assert.Empty(t, errs, "expected no errors from sequential callbacks")
+}
+
+func TestSequentialCallbacksRegisterCallback(t *testing.T) {
+	manager := NewSequentialCallbackManager(nil)
+
+	initial := uint32(3)
+	actual, expected := initial * 2, initial * 2
+
+	for i := 0; i < numCB; i++ {
+		i := uint32(i)
+
+		manager.RegisterCallback(func(register registerCallback, params ...interface{}) error {
+			actual += i
+			register(func(register registerCallback, params ...interface{}) error {
+				//do nothing
+				actual += i
+				return nil
+			})
 			return nil
 		})
 
@@ -48,7 +76,7 @@ func TestSequentialCallbacksRegisterConcurrent(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			manager.RegisterCallback(func(params ...interface{}) error {
+			manager.RegisterCallback(func(register registerCallback, params ...interface{}) error {
 				actual += i
 
 				if i == numCB/2 {
@@ -83,7 +111,7 @@ func TestSequentialCallbacksRunConcurrent(t *testing.T) {
 
 	expectedCount := numCB
 	for i := 0; i < expectedCount; i++ {
-		manager.RegisterCallback(func(params ...interface{}) error {
+		manager.RegisterCallback(func(register registerCallback, params ...interface{}) error {
 			// pretend we're doing something here
 			time.Sleep(100 * time.Millisecond)
 
@@ -127,7 +155,7 @@ func TestSequentialCallbackDeregistered(t *testing.T) {
 	for i := 0; i < numCB; i++ {
 		i := i
 
-		manager.RegisterCallback(func(params ...interface{}) error {
+		manager.RegisterCallback(func(register registerCallback, params ...interface{}) error {
 			actual = append(actual, i)
 			return DeregisterCallback
 		})
@@ -154,7 +182,7 @@ func TestSequentialCallbacksOnError(t *testing.T) {
 	for i := 0; i < numCB; i++ {
 		err := errors.Errorf("%d", i)
 
-		manager.RegisterCallback(func(params ...interface{}) error {
+		manager.RegisterCallback(func(register registerCallback, params ...interface{}) error {
 			return err
 		})
 
@@ -188,7 +216,7 @@ func TestSequentialCallbackIntegration(t *testing.T) {
 			removed[i] = struct{}{}
 		}
 
-		funcs = append(funcs, func(params ...interface{}) error {
+		funcs = append(funcs, func(register registerCallback, params ...interface{}) error {
 			if remove {
 				return DeregisterCallback
 			}

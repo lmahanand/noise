@@ -12,7 +12,6 @@ type ReduceCallbackManager struct {
 func NewReduceCallbackManager(mu *sync.Mutex) *ReduceCallbackManager {
 	r := &ReduceCallbackManager{
 		reverse: false,
-
 	}
 
 	if mu == nil {
@@ -32,13 +31,17 @@ func (m *ReduceCallbackManager) Reverse() *ReduceCallbackManager {
 func (m *ReduceCallbackManager) RegisterCallback(c reduceCallback) {
 	m.Lock()
 
+	m.UnsafeRegisterCallback(c)
+
+	m.Unlock()
+}
+
+func (m *ReduceCallbackManager) UnsafeRegisterCallback(c reduceCallback) {
 	if m.reverse {
 		m.callbacks = append([]*reduceCallback{&c}, m.callbacks...)
 	} else {
 		m.callbacks = append(m.callbacks, &c)
 	}
-
-	m.Unlock()
 }
 
 // RunCallbacks runs all callbacks on a variadic parameter list, and de-registers callbacks
@@ -46,18 +49,11 @@ func (m *ReduceCallbackManager) RegisterCallback(c reduceCallback) {
 func (m *ReduceCallbackManager) RunCallbacks(in interface{}, params ...interface{}) (res interface{}, errs []error) {
 	m.Lock()
 
-	cpy := make([]*reduceCallback, len(m.callbacks))
-	copy(cpy, m.callbacks)
-
-	m.callbacks = make([]*reduceCallback, 0)
-
-	m.Unlock()
-
 	var remaining []*reduceCallback
 	var err error
 
-	for _, c := range cpy {
-		if in, err = (*c)(in, params...); err != nil {
+	for _, c := range m.callbacks {
+		if in, err = (*c)(m.UnsafeRegisterCallback, in, params...); err != nil {
 			if err != DeregisterCallback {
 				errs = append(errs, err)
 			}
@@ -65,10 +61,7 @@ func (m *ReduceCallbackManager) RunCallbacks(in interface{}, params ...interface
 			remaining = append(remaining, c)
 		}
 	}
-
-	m.Lock()
-
-	m.callbacks = append(m.callbacks, remaining...)
+	m.callbacks = remaining
 
 	m.Unlock()
 
