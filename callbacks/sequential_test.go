@@ -9,7 +9,7 @@ import (
 )
 
 func TestSequentialCallbacks(t *testing.T) {
-	manager := NewSequentialCallbackManager()
+	manager := NewSequentialCallbackManager(nil)
 
 	initial := uint32(3)
 	actual, expected := initial, initial
@@ -32,7 +32,7 @@ func TestSequentialCallbacks(t *testing.T) {
 }
 
 func TestSequentialCallbacksConcurrent(t *testing.T) {
-	manager := NewSequentialCallbackManager()
+	manager := NewSequentialCallbackManager(nil)
 
 	initial := uint32(3)
 	actual, expected := initial, initial
@@ -77,7 +77,7 @@ func TestSequentialCallbacksConcurrent(t *testing.T) {
 }
 
 func TestSequentialCallbackDeregistered(t *testing.T) {
-	manager := NewSequentialCallbackManager()
+	manager := NewSequentialCallbackManager(nil)
 
 	var actual []int
 	var expected []int
@@ -105,7 +105,7 @@ func TestSequentialCallbackDeregistered(t *testing.T) {
 }
 
 func TestSequentialCallbacksOnError(t *testing.T) {
-	manager := NewSequentialCallbackManager()
+	manager := NewSequentialCallbackManager(nil)
 
 	var expected []error
 
@@ -157,7 +157,7 @@ func TestSequentialCallbackIntegration(t *testing.T) {
 		indices = append(indices, i)
 	}
 
-	manager := NewSequentialCallbackManager()
+	manager := NewSequentialCallbackManager(nil)
 	for i := 0; i < numCB; i++ {
 		manager.RegisterCallback(funcs[i])
 	}

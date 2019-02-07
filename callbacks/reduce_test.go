@@ -8,7 +8,7 @@ import (
 )
 
 func TestReduceCallbacks(t *testing.T) {
-	manager := NewReduceCallbackManager()
+	manager := NewReduceCallbackManager(nil)
 
 	initial := 3
 	expected := initial
@@ -30,7 +30,7 @@ func TestReduceCallbacks(t *testing.T) {
 }
 
 func TestReduceCallbacksDeregisterMidway(t *testing.T) {
-	manager := NewReduceCallbackManager()
+	manager := NewReduceCallbackManager(nil)
 
 	initial := 3
 	expected := initial
@@ -63,7 +63,7 @@ func TestReduceCallbacksDeregisterMidway(t *testing.T) {
 }
 
 func TestReduceCallbacksConcurrent(t *testing.T) {
-	manager := NewReduceCallbackManager()
+	manager := NewReduceCallbackManager(nil)
 
 	initial := 3
 	expected := initial
@@ -106,7 +106,7 @@ func TestReduceCallbacksConcurrent(t *testing.T) {
 }
 
 func TestReduceCallbacksDeregistered(t *testing.T) {
-	manager := NewReduceCallbackManager()
+	manager := NewReduceCallbackManager(nil)
 
 	var actual []int
 	var expected []int
@@ -136,7 +136,7 @@ func TestReduceCallbacksDeregistered(t *testing.T) {
 }
 
 func TestReduceCallbacksOnError(t *testing.T) {
-	manager := NewReduceCallbackManager()
+	manager := NewReduceCallbackManager(nil)
 
 	var expected []error
 
